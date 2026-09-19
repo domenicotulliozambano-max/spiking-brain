@@ -1,4 +1,4 @@
-﻿// Elements
+﻿// DOM Elements
 const messagesContainer = document.getElementById('messages-container');
 const chatForm = document.getElementById('chat-form');
 const promptInput = document.getElementById('prompt-input');
@@ -25,78 +25,117 @@ const valTokens = document.getElementById('val-tokens');
 sliderTemp.addEventListener('input', () => valTemp.textContent = sliderTemp.value);
 sliderTokens.addEventListener('input', () => valTokens.textContent = sliderTokens.value);
 
-// Auto resize textarea
+// Auto-resize textarea
 promptInput.addEventListener('input', () => {
   promptInput.style.height = 'auto';
-  promptInput.style.height = Math.min(promptInput.scrollHeight, 120) + 'px';
+  promptInput.style.height = Math.min(promptInput.scrollHeight, 180) + 'px';
 });
 
+// Submit on Enter without Shift, or Ctrl+Enter
 promptInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
-    chatForm.dispatchEvent(new Event('submit'));
+    handleSend();
   }
 });
 
-// Quick chips
+chatForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  handleSend();
+});
+
+// Quick prompts chips
 document.querySelectorAll('.quick-chip').forEach(chip => {
   chip.addEventListener('click', () => {
     promptInput.value = chip.textContent.trim().replace(/^[^\w\s]+/, '').trim();
     promptInput.focus();
+    promptInput.style.height = 'auto';
+    promptInput.style.height = Math.min(promptInput.scrollHeight, 180) + 'px';
   });
 });
 
-// WebSocket Chat
-let ws = null;
-let currentAssistantMessageDiv = null;
 let isGenerating = false;
 
-function initWebSocket() {
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  ws = new WebSocket(${protocol}///ws/chat);
+async function handleSend() {
+  const prompt = promptInput.value.trim();
+  if (!prompt || isGenerating) return;
 
-  ws.onopen = () => {
-    console.log('WebSocket connesso con SpikingBrain Studio.');
-  };
+  isGenerating = true;
+  btnSend.disabled = true;
+  brainIcon.classList.add('spiking-active');
 
-  ws.onmessage = (event) => {
-    const data = JSON.parse(event.data);
+  // Append user message immediately
+  appendUserMessage(prompt);
+  promptInput.value = '';
+  promptInput.style.height = 'auto';
 
-    if (data.done) {
-      finishGeneration();
-      return;
+  // Create assistant placeholder
+  const assistantDiv = createAssistantMessage();
+  const textElem = assistantDiv.querySelector('.msg-content');
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt: prompt,
+        temperature: parseFloat(sliderTemp.value),
+        max_tokens: parseInt(sliderTokens.value)
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(Errore dal server (): );
     }
 
-    if (data.error) {
-      appendErrorMessage(data.error);
-      finishGeneration();
-      return;
-    }
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let buffer = '';
 
-    if (data.text && currentAssistantMessageDiv) {
-      const textElem = currentAssistantMessageDiv.querySelector('.msg-content');
-      textElem.textContent += data.text;
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
 
-    if (data.metrics) {
-      updateLiveMetrics(data.metrics);
-    }
-  };
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n\n');
+      buffer = lines.pop(); // keep last incomplete chunk in buffer
 
-  ws.onclose = () => {
-    console.log('WebSocket disconnesso, riconnessione in 2 secondi...');
-    setTimeout(initWebSocket, 2000);
-  };
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(line.slice(6));
+            if (data.done) {
+              break;
+            }
+            if (data.text) {
+              textElem.textContent += data.text;
+              messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+            if (data.metrics) {
+              updateLiveMetrics(data.metrics);
+            }
+          } catch (pe) {
+            console.error('JSON parse error in SSE chunk:', pe);
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Generation failed:', err);
+    appendErrorMessage(err.message || 'Si è verificato un errore durante la generazione.');
+  } finally {
+    isGenerating = false;
+    btnSend.disabled = false;
+    brainIcon.classList.remove('spiking-active');
+  }
 }
-
-initWebSocket();
 
 function appendUserMessage(text) {
   const div = document.createElement('div');
   div.className = 'flex justify-end';
   div.innerHTML = 
-    <div class="bg-emerald-600/90 text-white rounded-2xl p-4 max-w-2xl text-sm shadow-md leading-relaxed">
+    <div class="bg-emerald-600/90 text-white rounded-2xl p-4 max-w-2xl text-sm shadow-md leading-relaxed whitespace-pre-wrap font-sans">
       
     </div>
   ;
@@ -128,7 +167,7 @@ function appendErrorMessage(err) {
       <i class="fa-solid fa-circle-exclamation"></i>
     </div>
     <div class="bg-red-900/30 border border-red-700/50 rounded-2xl p-4 text-sm text-red-200 shadow-md flex-1">
-      <p class="font-bold mb-1">Errore di Generazione:</p>
+      <p class="font-bold mb-1">Attenzione:</p>
       <p></p>
     </div>
   ;
@@ -152,39 +191,6 @@ function updateLiveMetrics(metrics) {
     txtSpikes.textContent = metrics.spikes_fired.toLocaleString();
   }
 }
-
-function finishGeneration() {
-  isGenerating = false;
-  btnSend.disabled = false;
-  brainIcon.classList.remove('spiking-active');
-}
-
-chatForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const prompt = promptInput.value.trim();
-  if (!prompt || isGenerating) return;
-
-  if (!ws || ws.readyState !== WebSocket.OPEN) {
-    appendErrorMessage('Connessione al server assente. Riprova tra un istante.');
-    return;
-  }
-
-  isGenerating = true;
-  btnSend.disabled = true;
-  brainIcon.classList.add('spiking-active');
-
-  appendUserMessage(prompt);
-  promptInput.value = '';
-  promptInput.style.height = 'auto';
-
-  currentAssistantMessageDiv = createAssistantMessage();
-
-  ws.send(JSON.stringify({
-    prompt: prompt,
-    temperature: parseFloat(sliderTemp.value),
-    max_tokens: parseInt(sliderTokens.value)
-  }));
-});
 
 // Fetch system info and models
 async function refreshState() {
@@ -251,7 +257,7 @@ async function loadModel(modelId) {
     if (res.ok) {
       refreshState();
     } else {
-      alert('Errore caricamento: ' + data.detail);
+      alert('Errore caricamento: ' + (data.detail || 'Impossibile caricare il modello'));
       refreshState();
     }
   } catch (e) {
