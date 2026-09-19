@@ -1,7 +1,7 @@
 ﻿import json
-import asyncio
+import time
 from pathlib import Path
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -33,83 +33,74 @@ class ModelActionRequest(BaseModel):
     model_id: str
 
 @app.get("/", response_class=HTMLResponse)
-async def get_index():
-    return FileResponse(STATIC_DIR / "index.html")
+def get_index():
+    # Return index.html with no-cache headers so browser never runs old cached script
+    response = FileResponse(STATIC_DIR / "index.html")
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 @app.get("/favicon.ico")
-async def get_favicon():
+def get_favicon():
     return FileResponse(STATIC_DIR / "spiking_brain.ico")
 
 @app.get("/api/system")
-async def get_system_status():
+def get_system_status():
     return engine.get_system_info()
 
 @app.get("/api/models")
-async def get_models():
+def get_models():
     return engine.list_models()
 
 @app.post("/api/models/download")
-async def download_model(req: ModelActionRequest):
+def download_model(req: ModelActionRequest):
     engine.download_model(req.model_id)
     return {"status": "started", "model_id": req.model_id}
 
 @app.post("/api/models/load")
-async def load_model(req: ModelActionRequest):
+def load_model(req: ModelActionRequest):
     try:
-        loop = asyncio.get_event_loop()
-        await loop.run_in_executor(None, engine.load_model, req.model_id)
+        engine.load_model(req.model_id)
         return {"status": "loaded", "current_model": req.model_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/chat")
-async def chat_sse(req: GenerationRequest):
-    if not req.prompt.strip():
-        raise HTTPException(status_code=400, detail="Il prompt non può essere vuoto.")
+def chat_sse(req: GenerationRequest):
+    if not req.prompt or not req.prompt.strip():
+        raise HTTPException(status_code=400, detail="Il testo non può essere vuoto.")
         
-    async def sse_generator():
-        def get_all_chunks():
-            return list(engine.generate_stream(
-                prompt=req.prompt,
-                system_prompt=req.system_prompt or "",
-                temperature=req.temperature or 0.7,
-                max_tokens=req.max_tokens or 512
-            ))
-            
-        loop = asyncio.get_event_loop()
-        chunks = await loop.run_in_executor(None, get_all_chunks)
-        
-        for c in chunks:
-            yield f"data: {json.dumps(c)}\n\n"
-            await asyncio.sleep(0.01)
-            
+    def sse_generator():
+        for chunk in engine.generate_stream(
+            prompt=req.prompt,
+            system_prompt=req.system_prompt or "",
+            temperature=req.temperature or 0.7,
+            max_tokens=req.max_tokens or 512
+        ):
+            yield f"data: {json.dumps(chunk)}\n\n"
         yield "data: {\"done\": true}\n\n"
 
     return StreamingResponse(sse_generator(), media_type="text/event-stream")
 
-@app.websocket("/ws/chat")
-async def websocket_chat(websocket: WebSocket):
-    await websocket.accept()
-    try:
-        while True:
-            data = await websocket.receive_text()
-            payload = json.loads(data)
-            prompt = payload.get("prompt", "")
-            if not prompt:
-                continue
-
-            for chunk in engine.generate_stream(
-                prompt=prompt,
-                system_prompt=payload.get("system_prompt", ""),
-                temperature=float(payload.get("temperature", 0.7)),
-                max_tokens=int(payload.get("max_tokens", 512))
-            ):
-                await websocket.send_json(chunk)
-                await asyncio.sleep(0.01)
-                
-            await websocket.send_json({"done": True})
-    except:
-        pass
+@app.post("/api/chat-sync")
+def chat_sync(req: GenerationRequest):
+    if not req.prompt or not req.prompt.strip():
+        raise HTTPException(status_code=400, detail="Il testo non può essere vuoto.")
+    
+    full_text = ""
+    last_metrics = {}
+    for chunk in engine.generate_stream(
+        prompt=req.prompt,
+        system_prompt=req.system_prompt or "",
+        temperature=req.temperature or 0.7,
+        max_tokens=req.max_tokens or 512
+    ):
+        full_text += chunk.get("text", "")
+        if "metrics" in chunk:
+            last_metrics = chunk["metrics"]
+            
+    return {"text": full_text, "metrics": last_metrics}
 
 if __name__ == "__main__":
     import uvicorn
