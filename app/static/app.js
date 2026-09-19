@@ -1,144 +1,58 @@
-﻿// DOM Elements
 const messagesContainer = document.getElementById('messages-container');
-const chatForm = document.getElementById('chat-form');
 const promptInput = document.getElementById('prompt-input');
 const btnSend = document.getElementById('btn-send');
+const statusIndicator = document.getElementById('status-indicator');
 const brainIcon = document.getElementById('brain-icon');
 const activeModelName = document.getElementById('active-model-name');
 const modelsContainer = document.getElementById('models-container');
 
-// Telemetry Elements
 const txtDevice = document.getElementById('txt-device');
 const txtRam = document.getElementById('txt-ram');
 const txtSparsity = document.getElementById('txt-sparsity');
 const barSparsity = document.getElementById('bar-sparsity');
 const txtSpeed = document.getElementById('txt-speed');
 const txtSpikes = document.getElementById('txt-spikes');
-const btnRefresh = document.getElementById('btn-refresh');
-
-// Settings
-const sliderTemp = document.getElementById('slider-temp');
-const valTemp = document.getElementById('val-temp');
-const sliderTokens = document.getElementById('slider-tokens');
-const valTokens = document.getElementById('val-tokens');
-
-sliderTemp.addEventListener('input', () => valTemp.textContent = sliderTemp.value);
-sliderTokens.addEventListener('input', () => valTokens.textContent = sliderTokens.value);
-
-// Auto-resize textarea
-promptInput.addEventListener('input', () => {
-  promptInput.style.height = 'auto';
-  promptInput.style.height = Math.min(promptInput.scrollHeight, 180) + 'px';
-});
-
-// Submit on Enter without Shift, or Ctrl+Enter
-promptInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    handleSend();
-  }
-});
-
-chatForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  handleSend();
-});
-
-// Quick prompts chips
-document.querySelectorAll('.quick-chip').forEach(chip => {
-  chip.addEventListener('click', () => {
-    promptInput.value = chip.textContent.trim().replace(/^[^\w\s]+/, '').trim();
-    promptInput.focus();
-    promptInput.style.height = 'auto';
-    promptInput.style.height = Math.min(promptInput.scrollHeight, 180) + 'px';
-  });
-});
 
 let isGenerating = false;
 
-async function handleSend() {
-  const prompt = promptInput.value.trim();
-  if (!prompt || isGenerating) return;
+promptInput.addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 180) + 'px';
+});
 
-  isGenerating = true;
-  btnSend.disabled = true;
-  brainIcon.classList.add('spiking-active');
-
-  // Append user message immediately
-  appendUserMessage(prompt);
-  promptInput.value = '';
-  promptInput.style.height = 'auto';
-
-  // Create assistant placeholder
-  const assistantDiv = createAssistantMessage();
-  const textElem = assistantDiv.querySelector('.msg-content');
-
-  try {
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        prompt: prompt,
-        temperature: parseFloat(sliderTemp.value),
-        max_tokens: parseInt(sliderTokens.value)
-      })
-    });
-
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(Errore dal server (): );
-    }
-
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder('utf-8');
-    let buffer = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n\n');
-      buffer = lines.pop(); // keep last incomplete chunk in buffer
-
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          try {
-            const data = JSON.parse(line.slice(6));
-            if (data.done) {
-              break;
-            }
-            if (data.text) {
-              textElem.textContent += data.text;
-              messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            }
-            if (data.metrics) {
-              updateLiveMetrics(data.metrics);
-            }
-          } catch (pe) {
-            console.error('JSON parse error in SSE chunk:', pe);
-          }
-        }
-      }
-    }
-  } catch (err) {
-    console.error('Generation failed:', err);
-    appendErrorMessage(err.message || 'Si è verificato un errore durante la generazione.');
-  } finally {
-    isGenerating = false;
-    btnSend.disabled = false;
-    brainIcon.classList.remove('spiking-active');
+promptInput.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    submitChat();
   }
+});
+
+function setPrompt(text) {
+  promptInput.value = text;
+  promptInput.focus();
+  promptInput.style.height = 'auto';
+  promptInput.style.height = Math.min(promptInput.scrollHeight, 180) + 'px';
+}
+
+function insertSampleText() {
+  setPrompt("Valuta questo brano di romanzo:\n\nLa pioggia batteva forte contro i vetri dello studio. Marco fissava il sigillo di ceralacca sulla busta, con le dita che tremavano. Erano passati dieci anni dall'ultima volta che aveva visto quella grafia. 'Se stai leggendo questo,' diceva la lettera, 'significa che hanno trovato anche me.' Spezzo il sigillo con un respiro profondo.");
+}
+
+function clearChat() {
+  messagesContainer.innerHTML = '';
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
 function appendUserMessage(text) {
   const div = document.createElement('div');
   div.className = 'flex justify-end';
-  div.innerHTML = 
-    <div class="bg-emerald-600/90 text-white rounded-2xl p-4 max-w-2xl text-sm shadow-md leading-relaxed whitespace-pre-wrap font-sans">
-      
-    </div>
-  ;
+  const bubble = document.createElement('div');
+  bubble.className = 'bg-emerald-600 text-white rounded-2xl p-4 max-w-2xl text-sm shadow-md leading-relaxed whitespace-pre-wrap font-sans';
+  bubble.textContent = text;
+  div.appendChild(bubble);
   messagesContainer.appendChild(div);
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
@@ -146,123 +60,166 @@ function appendUserMessage(text) {
 function createAssistantMessage() {
   const div = document.createElement('div');
   div.className = 'flex space-x-4 max-w-3xl';
-  div.innerHTML = 
-    <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center shrink-0 mt-1">
-      <i class="fa-solid fa-brain"></i>
-    </div>
-    <div class="bg-gray-800/80 border border-gray-700/60 rounded-2xl p-4 text-sm text-gray-200 shadow-md flex-1">
-      <div class="msg-content whitespace-pre-wrap leading-relaxed font-sans"></div>
-    </div>
-  ;
+  const icon = document.createElement('div');
+  icon.className = 'w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center shrink-0 mt-1 shadow';
+  icon.innerHTML = '<i class="fa-solid fa-brain"></i>';
+  const body = document.createElement('div');
+  body.className = 'bg-gray-800/90 border border-gray-700/60 rounded-2xl p-5 text-sm text-gray-200 shadow-xl flex-1 leading-relaxed';
+  const content = document.createElement('div');
+  content.className = 'msg-content whitespace-pre-wrap leading-relaxed font-sans';
+  body.appendChild(content);
+  div.appendChild(icon);
+  div.appendChild(body);
   messagesContainer.appendChild(div);
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
   return div;
 }
 
-function appendErrorMessage(err) {
-  const div = document.createElement('div');
-  div.className = 'flex space-x-4 max-w-3xl';
-  div.innerHTML = 
-    <div class="w-8 h-8 rounded-lg bg-red-500/20 text-red-400 border border-red-500/30 flex items-center justify-center shrink-0 mt-1">
-      <i class="fa-solid fa-circle-exclamation"></i>
-    </div>
-    <div class="bg-red-900/30 border border-red-700/50 rounded-2xl p-4 text-sm text-red-200 shadow-md flex-1">
-      <p class="font-bold mb-1">Attenzione:</p>
-      <p></p>
-    </div>
-  ;
-  messagesContainer.appendChild(div);
-  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+function updateMetrics(m) {
+  if (!m) return;
+  if (m.tokens_per_sec !== undefined) txtSpeed.textContent = m.tokens_per_sec + ' tok/s';
+  if (m.sparsity_percent !== undefined) {
+    txtSparsity.textContent = m.sparsity_percent + '%';
+    barSparsity.style.width = m.sparsity_percent + '%';
+  }
+  if (m.spikes_fired !== undefined) txtSpikes.textContent = Number(m.spikes_fired).toLocaleString();
 }
 
-function escapeHtml(str) {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+async function submitChat() {
+  const prompt = promptInput.value.trim();
+  if (!prompt || isGenerating) return;
+  isGenerating = true;
+  btnSend.disabled = true;
+  statusIndicator.classList.remove('hidden');
+  brainIcon.classList.add('spiking-active');
+  appendUserMessage(prompt);
+  promptInput.value = '';
+  promptInput.style.height = 'auto';
+  const assistantDiv = createAssistantMessage();
+  const textElem = assistantDiv.querySelector('.msg-content');
+  const payload = {
+    prompt: prompt,
+    temperature: parseFloat(document.getElementById('slider-temp').value),
+    max_tokens: parseInt(document.getElementById('slider-tokens').value)
+  };
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (response.ok && response.body) {
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split('\n\n');
+        buffer = parts.pop();
+        for (const part of parts) {
+          const trimmed = part.trim();
+          if (trimmed.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(trimmed.slice(6));
+              if (data.done) break;
+              if (data.text) {
+                textElem.textContent += data.text;
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+              }
+              if (data.metrics) updateMetrics(data.metrics);
+            } catch(e) {}
+          }
+        }
+      }
+    } else {
+      const syncRes = await fetch('/api/chat-sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const syncData = await syncRes.json();
+      textElem.textContent = syncData.text || 'Nessuna risposta generata.';
+      if (syncData.metrics) updateMetrics(syncData.metrics);
+    }
+  } catch (err) {
+    console.error('Chat error:', err);
+    try {
+      const syncRes = await fetch('/api/chat-sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const syncData = await syncRes.json();
+      textElem.textContent = syncData.text;
+      if (syncData.metrics) updateMetrics(syncData.metrics);
+    } catch (e2) {
+      textElem.innerHTML = '<span class="text-red-400 font-bold">Errore: </span>' + escapeHtml(err.message);
+    }
+  } finally {
+    isGenerating = false;
+    btnSend.disabled = false;
+    statusIndicator.classList.add('hidden');
+    brainIcon.classList.remove('spiking-active');
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
 }
 
-function updateLiveMetrics(metrics) {
-  if (metrics.tokens_per_sec !== undefined) {
-    txtSpeed.textContent = ${metrics.tokens_per_sec} tok/s;
-  }
-  if (metrics.sparsity_percent !== undefined) {
-    txtSparsity.textContent = ${metrics.sparsity_percent}%;
-    barSparsity.style.width = ${metrics.sparsity_percent}%;
-  }
-  if (metrics.spikes_fired !== undefined) {
-    txtSpikes.textContent = metrics.spikes_fired.toLocaleString();
-  }
-}
-
-// Fetch system info and models
 async function refreshState() {
   try {
     const sysRes = await fetch('/api/system');
-    const sysData = await sysRes.json();
-    
-    txtDevice.innerHTML = <i class="fa-solid fa-microchip text-cyan-400 mr-1.5"></i> ;
-    txtRam.innerHTML = <i class="fa-solid fa-memory text-purple-400 mr-1.5"></i>  /  GB;
-
-    const modelsRes = await fetch('/api/models');
-    const models = await modelsRes.json();
-    renderModels(models, sysData.current_model);
-  } catch (err) {
-    console.error('Errore refresh:', err);
+    const sys = await sysRes.json();
+    txtDevice.innerHTML = '<i class="fa-solid fa-microchip text-cyan-400 mr-1.5"></i> ' + sys.device.toUpperCase();
+    txtRam.innerHTML = '<i class="fa-solid fa-memory text-purple-400 mr-1.5"></i> ' + sys.free_ram_gb + ' / ' + sys.total_ram_gb + ' GB';
+    const modRes = await fetch('/api/models');
+    const models = await modRes.json();
+    renderModels(models, sys.current_model);
+  } catch(e) {
+    console.error('Refresh error:', e);
   }
 }
 
-function renderModels(models, currentModelId) {
+function renderModels(models, currentId) {
   modelsContainer.innerHTML = '';
   models.forEach(m => {
-    const isCurrent = m.id === currentModelId;
-    if (isCurrent) {
-      activeModelName.textContent = m.name;
-    }
-
+    const isCurrent = m.id === currentId;
+    if (isCurrent) activeModelName.textContent = m.name;
     const card = document.createElement('div');
-    card.className = p-3 rounded-xl border text-xs transition ;
-    
+    card.className = 'p-3 rounded-xl border text-xs transition ' + (isCurrent ? 'bg-emerald-950/40 border-emerald-500/50' : 'bg-gray-800/40 border-gray-700/50');
     let actionBtn = '';
     if (m.id === 'simulation-demo') {
-      actionBtn = isCurrent ? '<span class="text-[10px] text-emerald-400 font-semibold">Attivo</span>' : <button onclick="loadModel('')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 rounded text-white text-[10px]">Attiva</button>;
+      actionBtn = isCurrent ? '<span class="text-[10px] text-emerald-400 font-bold">Attivo</span>' : '<button data-load="' + m.id + '" class="btn-action px-2 py-1 bg-emerald-600 rounded text-white text-[10px]">Attiva</button>';
     } else if (m.downloaded) {
-      actionBtn = isCurrent ? '<span class="text-[10px] text-emerald-400 font-semibold">In Uso</span>' : <button onclick="loadModel('')" class="px-2 py-1 bg-cyan-600 hover:bg-cyan-500 rounded text-white text-[10px]">Carica</button>;
+      actionBtn = isCurrent ? '<span class="text-[10px] text-emerald-400 font-bold">In Uso</span>' : '<button data-load="' + m.id + '" class="btn-action px-2 py-1 bg-cyan-600 rounded text-white text-[10px]">Carica</button>';
     } else {
-      actionBtn = <button onclick="downloadModel('')" class="px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-gray-200 text-[10px]"><i class="fa-solid fa-download mr-1"></i>Scarica ()</button>;
+      actionBtn = '<button data-download="' + m.id + '" class="btn-action px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-gray-200 text-[10px]"><i class="fa-solid fa-download mr-1"></i>Scarica</button>';
     }
-
-    card.innerHTML = 
-      <div class="flex justify-between items-start mb-1">
-        <span class="font-bold text-gray-200"></span>
-        
-      </div>
-      <p class="text-gray-400 text-[11px] mb-2 leading-relaxed"></p>
-      <div class="flex items-center text-[10px] text-gray-500 space-x-2">
-        <span>Dimensione: </span>
-        <span>•</span>
-        <span></span>
-      </div>
-    ;
+    card.innerHTML = '<div class="flex justify-between items-start mb-1"><span class="font-bold text-gray-200">' + m.name + '</span>' + actionBtn + '</div><p class="text-gray-400 text-[11px] mb-2 leading-relaxed">' + m.description + '</p><div class="flex items-center text-[10px] text-gray-500 space-x-2"><span>' + m.size + '</span><span>?</span><span>' + m.recommended_device + '</span></div>';
     modelsContainer.appendChild(card);
   });
 }
 
+modelsContainer.addEventListener('click', function(e) {
+  const btn = e.target.closest('.btn-action');
+  if (!btn) return;
+  if (btn.dataset.load) loadModel(btn.dataset.load);
+  if (btn.dataset.download) downloadModel(btn.dataset.download);
+});
+
 async function loadModel(modelId) {
+  activeModelName.textContent = 'Caricamento pesi in memoria...';
   try {
-    activeModelName.textContent = 'Caricamento in corso...';
     const res = await fetch('/api/models/load', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ model_id: modelId })
     });
-    const data = await res.json();
-    if (res.ok) {
-      refreshState();
-    } else {
-      alert('Errore caricamento: ' + (data.detail || 'Impossibile caricare il modello'));
-      refreshState();
-    }
-  } catch (e) {
+    const d = await res.json();
+    if (res.ok) refreshState();
+    else alert('Errore: ' + (d.detail || 'Impossibile caricare il modello'));
+  } catch(e) {
     alert('Errore: ' + e.message);
-    refreshState();
   }
 }
 
@@ -273,17 +230,13 @@ async function downloadModel(modelId) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ model_id: modelId })
     });
-    alert('Download avviato in background da ModelScope! Puoi monitorare la cartella dei modelli.');
+    alert('Download avviato in background da ModelScope!');
     setTimeout(refreshState, 3000);
-  } catch (e) {
-    alert('Errore avvio download: ' + e.message);
+  } catch(e) {
+    alert('Errore download: ' + e.message);
   }
 }
 
-btnRefresh.addEventListener('click', refreshState);
-refreshState();
-
-// Synaptic Background Canvas Animation
 const canvas = document.getElementById('brain-canvas');
 const ctx = canvas.getContext('2d');
 let width, height, nodes = [];
@@ -295,31 +248,28 @@ function resizeCanvas() {
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-for (let i = 0; i < 45; i++) {
+for (let i = 0; i < 40; i++) {
   nodes.push({
     x: Math.random() * width,
     y: Math.random() * height,
-    vx: (Math.random() - 0.5) * 0.6,
-    vy: (Math.random() - 0.5) * 0.6,
+    vx: (Math.random() - 0.5) * 0.5,
+    vy: (Math.random() - 0.5) * 0.5,
     radius: Math.random() * 2 + 1
   });
 }
 
-function animateCanvas() {
+function animate() {
   ctx.clearRect(0, 0, width, height);
-  
   for (let i = 0; i < nodes.length; i++) {
     const n = nodes[i];
     n.x += n.vx;
     n.y += n.vy;
     if (n.x < 0 || n.x > width) n.vx *= -1;
     if (n.y < 0 || n.y > height) n.vy *= -1;
-
     ctx.beginPath();
     ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
     ctx.fillStyle = isGenerating ? '#34d399' : '#06b6d4';
     ctx.fill();
-
     for (let j = i + 1; j < nodes.length; j++) {
       const n2 = nodes[j];
       const dist = Math.hypot(n.x - n2.x, n.y - n2.y);
@@ -327,14 +277,14 @@ function animateCanvas() {
         ctx.beginPath();
         ctx.moveTo(n.x, n.y);
         ctx.lineTo(n2.x, n2.y);
-        ctx.strokeStyle = isGenerating 
-          ? gba(52, 211, 153, )
-          : gba(6, 182, 212, );
+        ctx.strokeStyle = isGenerating ? 'rgba(52, 211, 153, ' + (0.4 * (1 - dist / 130)) + ')' : 'rgba(6, 182, 212, ' + (0.18 * (1 - dist / 130)) + ')';
         ctx.lineWidth = isGenerating ? 1.5 : 0.8;
         ctx.stroke();
       }
     }
   }
-  requestAnimationFrame(animateCanvas);
+  requestAnimationFrame(animate);
 }
-animateCanvas();
+animate();
+
+refreshState();

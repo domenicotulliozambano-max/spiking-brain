@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="it" class="dark">
 <head>
   <meta charset="UTF-8">
@@ -21,7 +21,7 @@
           }
         }
       }
-    }
+    };
   </script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -55,7 +55,6 @@
 
   <!-- Sidebar -->
   <aside class="w-80 bg-darkpanel border-r border-darkborder flex flex-col z-10 shrink-0">
-    <!-- Header -->
     <div class="p-4 border-b border-darkborder flex items-center justify-between">
       <div class="flex items-center space-x-3">
         <div id="brain-icon" class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-cyan-500 flex items-center justify-center text-white text-xl shadow-lg shadow-emerald-500/20">
@@ -71,17 +70,16 @@
       </button>
     </div>
 
-    <!-- Telemetry & Neuromorphic Monitor -->
+    <!-- Monitor -->
     <div class="p-4 border-b border-darkborder space-y-3 bg-gray-900/40">
       <div class="flex items-center justify-between text-xs font-semibold text-gray-400 uppercase tracking-wider">
         <span>Monitor Neuromorfico</span>
         <span id="badge-status" class="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px]">Attivo</span>
       </div>
 
-      <!-- Spiking Sparsity Gauge -->
       <div class="bg-gray-800/60 p-3 rounded-xl border border-gray-700/50">
         <div class="flex justify-between text-xs mb-1">
-          <span class="text-gray-300"><i class="fa-solid fa-bolt text-amber-400 mr-1.5"></i>Sparsità Spike</span>
+          <span class="text-gray-300"><i class="fa-solid fa-bolt text-amber-400 mr-1.5"></i>Sparsit? Spike</span>
           <span id="txt-sparsity" class="font-bold text-emerald-400">69.15%</span>
         </div>
         <div class="w-full bg-gray-700 h-1.5 rounded-full overflow-hidden">
@@ -89,7 +87,6 @@
         </div>
       </div>
 
-      <!-- Hardware & Memory Status -->
       <div class="grid grid-cols-2 gap-2 text-xs">
         <div class="bg-gray-800/60 p-2.5 rounded-xl border border-gray-700/50">
           <div class="text-gray-400 text-[11px] mb-0.5">Dispositivo</div>
@@ -105,10 +102,9 @@
         </div>
       </div>
 
-      <!-- Token Speed & Spike Counter -->
       <div class="grid grid-cols-2 gap-2 text-xs">
         <div class="bg-gray-800/60 p-2.5 rounded-xl border border-gray-700/50">
-          <div class="text-gray-400 text-[11px] mb-0.5">Velocità</div>
+          <div class="text-gray-400 text-[11px] mb-0.5">Velocit?</div>
           <div id="txt-speed" class="font-semibold text-emerald-400">0.0 tok/s</div>
         </div>
         <div class="bg-gray-800/60 p-2.5 rounded-xl border border-gray-700/50">
@@ -123,9 +119,7 @@
       <div class="flex items-center justify-between text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
         <span>Checkpoint & Modelli</span>
       </div>
-      <div id="models-container" class="space-y-2.5">
-        <!-- Injected via JS -->
-      </div>
+      <div id="models-container" class="space-y-2.5"></div>
     </div>
 
     <!-- Settings -->
@@ -158,25 +152,24 @@
           <i class="fa-solid fa-trash-can mr-1.5"></i> Pulisci Chat
         </button>
         <a href="https://github.com/domenicotulliozambano-max/spiking-brain" target="_blank" class="text-xs px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 transition flex items-center">
-          <i class="fa-brands fa-github mr-1.5"></i> GitHub Repo
+          <i class="fa-brands fa-github mr-1.5"></i> GitHub
         </a>
       </div>
     </header>
 
     <!-- Chat Messages -->
     <div id="messages-container" class="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar z-10">
-      <!-- Welcome Message -->
       <div class="flex space-x-4 max-w-3xl">
         <div class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center shrink-0 shadow-lg">
           <i class="fa-solid fa-brain"></i>
         </div>
         <div class="bg-gray-800/90 border border-gray-700/60 rounded-2xl p-5 text-sm text-gray-200 shadow-xl leading-relaxed">
           <p class="font-bold text-base text-emerald-400 mb-2">Benvenuto in SpikingBrain AI Studio 2.0!</p>
-          <p class="mb-2">Il sistema è pronto per ricevere qualsiasi testo, capitolo o romanzo da valutare.</p>
+          <p class="mb-2">Il sistema ? pronto per ricevere qualsiasi testo, capitolo o romanzo da valutare.</p>
           <div class="bg-emerald-950/40 border border-emerald-500/30 rounded-xl p-3 text-xs text-emerald-300 mb-3">
-            💡 <strong>Come valutare un romanzo:</strong> Incolla il testo del tuo capitolo nel riquadro in basso e clicca sul pulsante verde <strong>Invia</strong> (oppure premi <strong>Invio</strong>).
+            ?? <strong>Come valutare un romanzo:</strong> Incolla il testo del tuo capitolo nel riquadro in basso e clicca sul pulsante verde <strong>Invia</strong> (oppure premi <strong>Invio</strong>).
           </div>
-          <p class="text-xs text-gray-400">SpikingBrain analizzerà automaticamente l'incipit, il ritmo (pacing), i dialoghi, lo stile e la tenuta narrativa.</p>
+          <p class="text-xs text-gray-400">SpikingBrain analizzer? automaticamente l'incipit, il ritmo (pacing), i dialoghi, lo stile e la tenuta narrativa.</p>
         </div>
       </div>
     </div>
@@ -184,13 +177,10 @@
     <!-- Quick Prompt Chips -->
     <div class="px-6 py-2 z-10 flex gap-2 overflow-x-auto custom-scrollbar">
       <button onclick="insertSampleText()" class="text-xs bg-emerald-900/40 hover:bg-emerald-800/60 border border-emerald-600/40 rounded-full px-3 py-1.5 text-emerald-300 font-medium hover:text-white shrink-0 transition flex items-center">
-        📖 Inserisci esempio di Romanzo da Valutare
+        ?? Inserisci esempio di Romanzo da Valutare
       </button>
       <button onclick="setPrompt('Spiegami come SpikingBrain supera i limiti di memoria dei Transformer tradizionali nei testi lunghi')" class="text-xs bg-gray-800/80 hover:bg-gray-700 border border-gray-700 rounded-full px-3 py-1.5 text-gray-300 hover:text-white shrink-0 transition">
-        ⚡ Perché SpikingBrain è ideale per i romanzi lunghi
-      </button>
-      <button onclick="setPrompt('Come posso allenare una rete neuronale a impulsi su hardware neuromorfico?')" class="text-xs bg-gray-800/80 hover:bg-gray-700 border border-gray-700 rounded-full px-3 py-1.5 text-gray-300 hover:text-white shrink-0 transition">
-        🧠 Neuroinformatica & SNN
+        ? Perch? SpikingBrain ? ideale per i romanzi
       </button>
     </div>
 
@@ -210,324 +200,6 @@
     </footer>
   </main>
 
-  <!-- Embedded Bulletproof Logic (No external JS, Zero Caching Issues) -->
-  <script>
-    const messagesContainer = document.getElementById('messages-container');
-    const promptInput = document.getElementById('prompt-input');
-    const btnSend = document.getElementById('btn-send');
-    const statusIndicator = document.getElementById('status-indicator');
-    const brainIcon = document.getElementById('brain-icon');
-    const activeModelName = document.getElementById('active-model-name');
-    const modelsContainer = document.getElementById('models-container');
-
-    const txtDevice = document.getElementById('txt-device');
-    const txtRam = document.getElementById('txt-ram');
-    const txtSparsity = document.getElementById('txt-sparsity');
-    const barSparsity = document.getElementById('bar-sparsity');
-    const txtSpeed = document.getElementById('txt-speed');
-    const txtSpikes = document.getElementById('txt-spikes');
-
-    let isGenerating = false;
-
-    // Handle Enter to send, Shift+Enter to newline
-    promptInput.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        submitChat();
-      }
-    });
-
-    // Auto resize
-    promptInput.addEventListener('input', function() {
-      this.style.height = 'auto';
-      this.style.height = Math.min(this.scrollHeight, 180) + 'px';
-    });
-
-    function setPrompt(text) {
-      promptInput.value = text;
-      promptInput.focus();
-      promptInput.style.height = 'auto';
-      promptInput.style.height = Math.min(promptInput.scrollHeight, 180) + 'px';
-    }
-
-    function insertSampleText() {
-      setPrompt("Valuta questo brano di romanzo:\n\nLa pioggia batteva con violenza sulle vetrate della vecchia biblioteca. Marco fissava il sigillo di ceralacca rossa sulla busta, le dita che tremavano leggermente per il freddo o forse per la paura di scoprire la verità. Erano passati dieci anni dall'ultima volta che aveva visto quella grafia ordinata e sottile. 'Se stai leggendo questo, Marco,' diceva la prima riga visibile in trasparenza, 'significa che hanno trovato anche me.'\nFece un respiro profondo, avvicinò il tagliacarte alla lama argentata e spezzò il sigillo.");
-    }
-
-    function clearChat() {
-      messagesContainer.innerHTML = '';
-    }
-
-    function appendUserMessage(text) {
-      const div = document.createElement('div');
-      div.className = 'flex justify-end';
-      div.innerHTML = 
-        <div class="bg-emerald-600 text-white rounded-2xl p-4 max-w-2xl text-sm shadow-md leading-relaxed whitespace-pre-wrap">
-          
-        </div>
-      ;
-      messagesContainer.appendChild(div);
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }
-
-    function createAssistantMessage() {
-      const div = document.createElement('div');
-      div.className = 'flex space-x-4 max-w-3xl';
-      div.innerHTML = 
-        <div class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center shrink-0 mt-1 shadow">
-          <i class="fa-solid fa-brain"></i>
-        </div>
-        <div class="bg-gray-800/90 border border-gray-700/60 rounded-2xl p-5 text-sm text-gray-200 shadow-xl flex-1 leading-relaxed">
-          <div class="msg-content whitespace-pre-wrap leading-relaxed"></div>
-        </div>
-      ;
-      messagesContainer.appendChild(div);
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      return div;
-    }
-
-    function escapeHtml(str) {
-      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
-
-    function updateMetrics(m) {
-      if (!m) return;
-      if (m.tokens_per_sec !== undefined) txtSpeed.textContent = m.tokens_per_sec + ' tok/s';
-      if (m.sparsity_percent !== undefined) {
-        txtSparsity.textContent = m.sparsity_percent + '%';
-        barSparsity.style.width = m.sparsity_percent + '%';
-      }
-      if (m.spikes_fired !== undefined) txtSpikes.textContent = m.spikes_fired.toLocaleString();
-    }
-
-    async function submitChat() {
-      const prompt = promptInput.value.trim();
-      if (!prompt || isGenerating) return;
-
-      isGenerating = true;
-      btnSend.disabled = true;
-      statusIndicator.classList.remove('hidden');
-      brainIcon.classList.add('spiking-active');
-
-      appendUserMessage(prompt);
-      promptInput.value = '';
-      promptInput.style.height = 'auto';
-
-      const assistantDiv = createAssistantMessage();
-      const textElem = assistantDiv.querySelector('.msg-content');
-
-      const payload = {
-        prompt: prompt,
-        temperature: parseFloat(document.getElementById('slider-temp').value),
-        max_tokens: parseInt(document.getElementById('slider-tokens').value)
-      };
-
-      try {
-        // Try streaming SSE first
-        const response = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        if (response.ok && response.body) {
-          const reader = response.body.getReader();
-          const decoder = new TextDecoder('utf-8');
-          let buffer = '';
-
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            buffer += decoder.decode(value, { stream: true });
-            const parts = buffer.split('\n\n');
-            buffer = parts.pop();
-
-            for (const part of parts) {
-              const trimmed = part.trim();
-              if (trimmed.startsWith('data: ')) {
-                try {
-                  const data = JSON.parse(trimmed.slice(6));
-                  if (data.done) break;
-                  if (data.text) {
-                    textElem.textContent += data.text;
-                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                  }
-                  if (data.metrics) updateMetrics(data.metrics);
-                } catch(e) {}
-              }
-            }
-          }
-        } else {
-          // Fallback to sync JSON endpoint
-          const syncRes = await fetch('/api/chat-sync', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-          const syncData = await syncRes.json();
-          textElem.textContent = syncData.text || 'Nessuna risposta generata.';
-          if (syncData.metrics) updateMetrics(syncData.metrics);
-        }
-      } catch (err) {
-        console.error('Chat error:', err);
-        // Direct sync fallback on network/stream exception
-        try {
-          const syncRes = await fetch('/api/chat-sync', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-          const syncData = await syncRes.json();
-          textElem.textContent = syncData.text;
-          if (syncData.metrics) updateMetrics(syncData.metrics);
-        } catch (e2) {
-          textElem.innerHTML = <span class="text-red-400 font-bold">Errore di connessione:</span> ;
-        }
-      } finally {
-        isGenerating = false;
-        btnSend.disabled = false;
-        statusIndicator.classList.add('hidden');
-        brainIcon.classList.remove('spiking-active');
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      }
-    }
-
-    async function refreshState() {
-      try {
-        const sysRes = await fetch('/api/system');
-        const sys = await sysRes.json();
-        txtDevice.innerHTML = <i class="fa-solid fa-microchip text-cyan-400 mr-1.5"></i> ;
-        txtRam.innerHTML = <i class="fa-solid fa-memory text-purple-400 mr-1.5"></i>  /  GB;
-
-        const modRes = await fetch('/api/models');
-        const models = await modRes.json();
-        renderModels(models, sys.current_model);
-      } catch(e) {
-        console.error('Refresh error:', e);
-      }
-    }
-
-    function renderModels(models, currentId) {
-      modelsContainer.innerHTML = '';
-      models.forEach(m => {
-        const isCurrent = m.id === currentId;
-        if (isCurrent) activeModelName.textContent = m.name;
-
-        const card = document.createElement('div');
-        card.className = p-3 rounded-xl border text-xs transition ;
-        
-        let actionBtn = '';
-        if (m.id === 'simulation-demo') {
-          actionBtn = isCurrent ? '<span class="text-[10px] text-emerald-400 font-bold">Attivo</span>' : <button onclick="loadModel('')" class="px-2 py-1 bg-emerald-600 rounded text-white text-[10px]">Attiva</button>;
-        } else if (m.downloaded) {
-          actionBtn = isCurrent ? '<span class="text-[10px] text-emerald-400 font-bold">In Uso</span>' : <button onclick="loadModel('')" class="px-2 py-1 bg-cyan-600 rounded text-white text-[10px]">Carica</button>;
-        } else {
-          actionBtn = <button onclick="downloadModel('')" class="px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-gray-200 text-[10px]"><i class="fa-solid fa-download mr-1"></i>Scarica</button>;
-        }
-
-        card.innerHTML = 
-          <div class="flex justify-between items-start mb-1">
-            <span class="font-bold text-gray-200"></span>
-            
-          </div>
-          <p class="text-gray-400 text-[11px] mb-2 leading-relaxed"></p>
-          <div class="flex items-center text-[10px] text-gray-500 space-x-2">
-            <span></span>
-            <span>•</span>
-            <span></span>
-          </div>
-        ;
-        modelsContainer.appendChild(card);
-      });
-    }
-
-    async function loadModel(modelId) {
-      activeModelName.textContent = 'Caricamento pesi in memoria...';
-      try {
-        const res = await fetch('/api/models/load', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model_id: modelId })
-        });
-        const d = await res.json();
-        if (res.ok) refreshState();
-        else alert('Errore: ' + (d.detail || 'Impossibile caricare il modello'));
-      } catch(e) {
-        alert('Errore: ' + e.message);
-      }
-    }
-
-    async function downloadModel(modelId) {
-      try {
-        await fetch('/api/models/download', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model_id: modelId })
-        });
-        alert('Download avviato in background da ModelScope!');
-        setTimeout(refreshState, 3000);
-      } catch(e) {
-        alert('Errore download: ' + e.message);
-      }
-    }
-
-    refreshState();
-
-    // Canvas Neuromorphic Background
-    const canvas = document.getElementById('brain-canvas');
-    const ctx = canvas.getContext('2d');
-    let width, height, nodes = [];
-
-    function resizeCanvas() {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
-    }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
-    for (let i = 0; i < 40; i++) {
-      nodes.push({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.5,
-        vy: (Math.random() - 0.5) * 0.5,
-        radius: Math.random() * 2 + 1
-      });
-    }
-
-    function animate() {
-      ctx.clearRect(0, 0, width, height);
-      for (let i = 0; i < nodes.length; i++) {
-        const n = nodes[i];
-        n.x += n.vx;
-        n.y += n.vy;
-        if (n.x < 0 || n.x > width) n.vx *= -1;
-        if (n.y < 0 || n.y > height) n.vy *= -1;
-
-        ctx.beginPath();
-        ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
-        ctx.fillStyle = isGenerating ? '#34d399' : '#06b6d4';
-        ctx.fill();
-
-        for (let j = i + 1; j < nodes.length; j++) {
-          const n2 = nodes[j];
-          const dist = Math.hypot(n.x - n2.x, n.y - n2.y);
-          if (dist < 130) {
-            ctx.beginPath();
-            ctx.moveTo(n.x, n.y);
-            ctx.lineTo(n2.x, n2.y);
-            ctx.strokeStyle = isGenerating 
-              ? gba(52, 211, 153, )
-              : gba(6, 182, 212, );
-            ctx.lineWidth = isGenerating ? 1.5 : 0.8;
-            ctx.stroke();
-          }
-        }
-      }
-      requestAnimationFrame(animate);
-    }
-    animate();
-  </script>
+  <script src="/static/app.js?v=20260919"></script>
 </body>
 </html>
